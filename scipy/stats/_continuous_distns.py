@@ -9,6 +9,7 @@ import ctypes
 
 import numpy as np
 from numpy.polynomial import Polynomial
+from scipy.interpolate import BSpline
 from scipy._lib.doccer import (extend_notes_in_docstring,
                                replace_notes_in_docstring,
                                inherit_docstring_from)
@@ -23,8 +24,8 @@ from scipy._lib._util import _lazyselect, _lazywhere
 from . import _stats
 from ._tukeylambda_stats import (tukeylambda_variance as _tlvar,
                                  tukeylambda_kurtosis as _tlkurt)
-from ._distn_infrastructure import (
-    get_distribution_names, _kurtosis,
+from ._distn_infrastructure import (_vectorize_rvs_over_shapes,
+    get_distribution_names, _kurtosis, _isintegral,
     rv_continuous, _skew, _get_fixed_fit_value, _check_shape, _ShapeInfo)
 from ._ksstats import kolmogn, kolmognp, kolmogni
 from ._constants import (_XMIN, _LOGXMIN, _EULER, _ZETA3, _SQRT_PI,
@@ -9033,6 +9034,101 @@ class rice_gen(rv_continuous):
 
 rice = rice_gen(a=0.0, name="rice")
 
+class irwinhall_gen(rv_continuous):
+    r"""An Irwin-Hall (Uniform Sum) continuous random variable.
+
+    An `Irwin-Hall <https://en.wikipedia.org/wiki/Irwin-Hall_distribution/>`_ 
+    [1]_ [2]_ continuous random variable is the sum 
+    of :math`n` independent standard uniform r.v.'s. 
+    
+    %(before_notes)s
+
+    Notes
+    -----
+    Applications include `Rao's Spacing Test <https://jammalam.faculty.pstat.ucsb.edu/html/favorite/test.htm>`_, 
+    a more powerful alternative to the Rayleigh test 
+    when the data are not unimodal, and radar [3]_.
+
+    Conveniently, the pdf and cdf are the :math:`n`-fold convolution of 
+    the ones for the standard uniform distribution,
+    which are well known to be just cardinal B-splines of degree :math:`n-1` 
+    with knots evenly spaced from :math:`1` to :math:`n`.
+
+    The Bates distribution is simply the Irwin-Hall distribution scaled 
+    by :math:`1/n`: ``bates = irwinhall(n, name="bates", scale=1/n)``
+
+    
+    %(after_notes)s
+
+    References
+    ----------
+    .. [1] HALL PHILIP, "THE DISTRIBUTION OF MEANS FOR SAMPLES OF SIZE N DRAWN 
+            FROM A POPULATION IN WHICH THE VARIATE TAKES VALUES BETWEEN 0 AND 1, 
+            ALL SUCH VALUES BEING EQUALLY PROBABLE", 
+            Biometrika, Volume 19, Issue 3-4, December 1927, Pages 240-244, 
+            https://doi.org/10.1093/biomet/19.3-4.240
+    .. [2] J. O. IRWIN, "ON THE FREQUENCY DISTRIBUTION OF THE MEANS OF SAMPLES 
+            FROM A POPULATION HAVING ANY LAW OF FREQUENCY WITH FINITE MOMENTS, 
+            WITH SPECIAL REFERENCE TO PEARSON'S TYPE II", 
+            Biometrika, Volume 19, Issue 3-4, December 1927, Pages 225-239, 
+            https://doi.org/10.1093/biomet/19.3-4.225
+    .. [3] K. Buchanan, T. Adeyemi, C. Flores-Molina, S. Wheeland and D. Overturf, 
+            "Sidelobe behavior and bandwidth characteristics 
+            of distributed antenna arrays," 
+            2018 United States National Committee of 
+            URSI National Radio Science Meeting (USNC-URSI NRSM), 
+            Boulder, CO, USA, 2018, pp. 1-2.
+            https://www.usnc-ursi-archive.org/nrsm/2018/papers/B15-9.pdf
+
+    %(example)s
+    """
+
+    def _argcheck(self, n):
+        return (n > 0) & _isintegral(n) & np.isrealobj(n)
+    
+    def _get_support(self, n):
+        return 0, n 
+    
+    def _shape_info(self):
+        return [_ShapeInfo("n", True, (1, np.inf), (True, False))]
+    
+    def _munp(self, n, t):
+        return (sc.expm1(t)/t)**n
+        
+    @staticmethod
+    def _cardbspl(n):
+        t = np.arange(n+1) 
+        return BSpline.basis_element(t)
+
+    def _pdf(self, x, n):
+        def vpdf(x, n):
+            return self._cardbspl(n)(x)
+        return np.vectorize(vpdf, otypes=[np.float64])(x, n)
+    
+    def _cdf(self, x, n):
+        def vcdf(x, n):
+            return self._cardbspl(n).antiderivative()(x)
+        return np.vectorize(vcdf, otypes=[np.float64])(x, n)
+    
+    def _rvs(self, n, size=None, random_state=None, *args):
+        @_vectorize_rvs_over_shapes
+        def _rvs1(n, size=None, random_state=None):
+            if not self._argcheck(n):
+                raise ValueError("n must be a positive integer")
+            n = np.floor(n).astype(int)
+            if size is None:
+                return np.sum(random_state.uniform(size=n)).item()
+            ret = random_state.uniform(size=(n, *size)).sum(axis=0)
+            return ret
+        return _rvs1(n, size=size, random_state=random_state)
+    
+    def _stats(self, n):
+        # mgf = ((exp(t) - 1)/t)**n
+        # m'th derivative follows from the generalized Leibniz rule
+
+        return n/2, n/12, 0, -6/(5*n)
+
+irwinhall = irwinhall_gen(name="irwinhall")    
 
 class recipinvgauss_gen(rv_continuous):
     r"""A reciprocal inverse Gaussian continuous random variable.
