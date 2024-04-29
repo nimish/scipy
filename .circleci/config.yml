@@ -46,7 +46,8 @@ jobs:
           environment:
             GIT_SSH_COMMAND: 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
           command: |
-            git clone --depth=1 --shallow-submodules --recurse-submodules -b "${CIRCLE_BRANCH}" "${CIRCLE_REPOSITORY_URL}";
+            git clone --depth=1 --shallow-submodules --recurse-submodules -b "${CIRCLE_BRANCH}" "${CIRCLE_REPOSITORY_URL}" scipy;
+            cd scipy;
 
             if [[ -v CIRCLE_PULL_REQUEST ]]; then
               git fetch origin "pull/${CIRCLE_PULL_REQUEST}/head:pr"
