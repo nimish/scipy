@@ -61,7 +61,7 @@ jobs:
               git checkout pr;
             else
               git fetch origin refs/heads/main:refs/remotes/origin/main --depth=1;
-              git pull --rebase origin/main;
+              git pull --rebase origin main --force;
             fi
 
       - check-skip
