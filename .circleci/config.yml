@@ -45,6 +45,10 @@ jobs:
           name: Checkout code
           environment:
             GIT_SSH_COMMAND: 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+            GIT_MERGE_AUTOEDIT: "no"
+            GIT_AUTHOR_NAME: scipy-circleci-bot
+            GIT_AUTHOR_EMAIL: scipy-circleci-bot@nomail
+
           command: |
             git clone --depth=1 --shallow-submodules --recurse-submodules -b "${CIRCLE_BRANCH}" "${CIRCLE_REPOSITORY_URL}" scipy;
             cd scipy;
