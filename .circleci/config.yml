@@ -54,7 +54,7 @@ jobs:
               git checkout pr;
             else
               git fetch origin refs/heads/main:refs/remotes/origin/main --depth=1;
-              git merge--allow-unrelated-histories --ff-only origin/main
+              git merge --allow-unrelated-histories --ff-only origin/main
             fi
 
       - check-skip
