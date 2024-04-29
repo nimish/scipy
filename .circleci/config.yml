@@ -43,6 +43,8 @@ jobs:
     steps:
       - run:
           name: Checkout code
+          environment:
+            GIT_SSH_COMMAND: 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
           command: |
             git clone --depth=1 --shallow-submodules --recurse-submodules -b "${CIRCLE_BRANCH}" "${CIRCLE_REPOSITORY_URL}";
 
