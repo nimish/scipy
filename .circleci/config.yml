@@ -50,7 +50,7 @@ jobs:
             cd scipy;
 
             if [[ -v CIRCLE_PULL_REQUEST ]]; then
-              git fetch origin "pull/${CIRCLE_PULL_REQUEST}/head:pr"
+              git fetch origin "+refs/pull/${CIRCLE_PR_NUMBER}/merge:pr";
               git checkout pr;
             fi
 
