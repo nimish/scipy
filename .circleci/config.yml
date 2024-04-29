@@ -53,6 +53,8 @@ jobs:
           command: |
             git clone --depth=1 --shallow-submodules --recurse-submodules -b "${CIRCLE_BRANCH}" "${CIRCLE_REPOSITORY_URL}" scipy;
             cd scipy;
+            git config user.email "scipy-circleci-bot@nomail";
+            git config user.name "scipy-circleci-bot";
 
             if [[ -v CIRCLE_PR_NUMBER ]]; then
               git fetch origin "+refs/pull/${CIRCLE_PR_NUMBER}/merge:pr" --depth=1;
