@@ -48,7 +48,6 @@ jobs:
             GIT_MERGE_AUTOEDIT: "no"
             GIT_AUTHOR_NAME: scipy-circleci-bot
             GIT_AUTHOR_EMAIL: scipy-circleci-bot@nomail
-
           command: |
             git clone --depth=1 --shallow-submodules --recurse-submodules -b "${CIRCLE_BRANCH}" "${CIRCLE_REPOSITORY_URL}" scipy;
             cd scipy;
@@ -58,7 +57,7 @@ jobs:
               git checkout pr;
             else
               git fetch origin refs/heads/main:refs/remotes/origin/main --depth=1;
-              git merge --allow-unrelated-histories --no-ff origin/main
+              git merge --allow-unrelated-histories --no-ff --no-commit origin/main
             fi
 
       - check-skip
