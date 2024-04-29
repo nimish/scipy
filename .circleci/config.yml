@@ -53,6 +53,7 @@ jobs:
               git fetch origin "+refs/pull/${CIRCLE_PR_NUMBER}/merge:pr";
               git checkout pr;
             else
+              git fetch origin refs/heads/main:refs/remotes/origin/main
               git merge --ff-only origin/main
             fi
 
